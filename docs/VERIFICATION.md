@@ -28,3 +28,7 @@ bun scripts/smoke-targets.ts
 ```
 
 Full acceptance on native Linux x64/arm64 CI, a physical reboot, macOS x64 execution, and WSL2 have not been run in this workspace. CI contains Linux x64/arm64 acceptance jobs and a conditional cloud-VM reboot workflow. Cloud testing needs the repository's AWS/AMI/SSH settings; release publication needs production signing keys, GitHub credentials and release-host settings. Tests use a deliberately public fixture keypair that default builds do not trust. No release was published during development.
+
+## WordPress catalog addition
+
+The WordPress entry was checked with 23 passing unit tests, catalog lint, type checking, and portability lint. A separate real-Docker integration test passed on macOS arm64/Docker Desktop: install, functional REST/database/upload checks, repeated setup with stable credentials, core-file migration preserving content, and recovery of a persistent post and upload after deletion of the MariaDB data volume. The test also checked generated secrets against operation journals and logs. The Linux x64/arm64 CI matrix now includes this WordPress integration test; those new CI runs have not been executed in this workspace.
