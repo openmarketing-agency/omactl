@@ -51,6 +51,7 @@ jobs:
       - run: docker build --build-arg APP_VERSION=1.0.0 -t omactl-testapp:1.0.0 fixtures/testapp
       - run: docker build --build-arg APP_VERSION=2.0.0 -t omactl-testapp:2.0.0 fixtures/testapp
       - run: OMA_E2E=1 bun run test:e2e
+      - run: OMA_WORDPRESS_E2E=1 bun test --timeout 600000 test/e2e/wordpress.test.ts
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -58,3 +59,5 @@ jobs:
           path: |
             .e2e/acceptance/state/ops/
             .e2e/acceptance/logs/
+            .e2e/wordpress-acceptance/state/ops/
+            .e2e/wordpress-acceptance/logs/

@@ -43,9 +43,24 @@ const hook = (service: string, script: string, timeout = 120) => ({
   timeout,
 });
 const main = async (root: string, version: string, broken = false) => {
-  await fs.rm(root, { recursive: true, force: true });
+  if (root === 'catalog') {
+    for (const entry of [
+      'system/traefik',
+      'apps/testapp',
+      'apps/testclient',
+      'bundles/notes-demo.yml',
+    ])
+      await fs.rm(path.join(root, entry), { recursive: true, force: true });
+  } else await fs.rm(root, { recursive: true, force: true });
   await writeJson(path.join(root, 'catalog.json'), {
-    version: version === '1.0.0' ? '2026.11.17-1' : broken ? '2026.11.17-broken' : '2026.11.17-2',
+    version:
+      root === 'catalog'
+        ? '2026.11.18-1'
+        : version === '1.0.0'
+          ? '2026.11.17-1'
+          : broken
+            ? '2026.11.17-broken'
+            : '2026.11.17-2',
     min_omactl: '0.1.0',
   });
   const tf = path.join(root, 'system', 'traefik');

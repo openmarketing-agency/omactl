@@ -2,7 +2,7 @@
 
 omactl manages the self-hosted apps in one Open Marketing Agency (OMA) instance. It installs apps from a catalog, runs functional checks, manages routing and connections between apps, takes backups, restores data, and applies updates with rollback.
 
-This guide covers the v1 tool in this repository. The current catalog contains Traefik and two test fixtures, `testapp` and `testclient`. The fixtures expose HTTP APIs; they are not marketing apps or a web dashboard.
+This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. The fixtures expose HTTP APIs.
 
 ## Contents
 
@@ -221,6 +221,19 @@ omactl install testapp \
 ```
 
 `.env` supplies Compose interpolation; an environment key affects a service only when that service's catalog definition maps it. Repeating an unchanged installation does not apply new `--set` values. Use the app's supported configuration mechanism or a local Compose override for ongoing container settings.
+
+### Install WordPress
+
+Once the instance catalog includes the WordPress entry:
+
+```sh
+omactl install wordpress --plan
+omactl install wordpress --set WORDPRESS_ADMIN_EMAIL=you@example.com
+omactl verify wordpress
+omactl credentials wordpress
+```
+
+The site uses the `wordpress` host under your instance base domain; its admin login is `/wp-admin/`. Read the [WordPress catalog guide](../catalog/apps/wordpress/README.md) for settings, credentials, backups, and upgrades. Existing instances need a catalog release containing the new entry; rerunning `init --catalog` does not refresh them.
 
 ### Start, stop, and restart
 
