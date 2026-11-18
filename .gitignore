@@ -1,0 +1,48 @@
+# Dependencies and compiled release artifacts
+node_modules/
+/dist/
+*.tsbuildinfo
+
+# Test output and caches
+/.e2e/
+/coverage/
+/.cache/
+
+# Local instance data, backup repositories, and logs
+/.oma/
+/backups/
+/oma-backups/
+/secrets/
+/logs/
+*.log
+
+# Local environment files; keep distributable examples and templates
+.env
+.env.*
+*.env
+!.env.example
+!.env.sample
+!.env.template
+!.env.*.example
+!.env.*.sample
+!.env.*.template
+!*.env.example
+!*.env.sample
+!*.env.template
+
+# Private keys and local certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Deliberately public test-only signing fixtures are part of the test suite
+!/fixtures/keys/*.pem
+
+# Operating system and editor temporary files
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.swo
+*~

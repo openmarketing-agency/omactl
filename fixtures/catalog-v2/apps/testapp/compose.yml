@@ -1,0 +1,50 @@
+services:
+  testapp:
+    image: omactl-testapp:2.0.0
+    environment:
+      MODE: server
+      PGHOST: db
+      PGUSER: oma
+      PGDATABASE: oma
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TESTAPP_BOOTSTRAP_TOKEN: ${TESTAPP_BOOTSTRAP_TOKEN}
+      PUBLIC_URL: ${PUBLIC_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - files:/data/files
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -qO-
+        - http://localhost:3000/healthz
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 2s
+  db:
+    image: postgres:17-alpine@sha256:a77aa70e641402a21411b92b721c58d10f23b50ae5fdd2333efd22d166e1e5f7
+    environment:
+      POSTGRES_USER: oma
+      POSTGRES_DB: oma
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - dump:/dump
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U oma -d oma
+      interval: 1s
+      timeout: 3s
+      retries: 30
+volumes:
+  files:
+    name: oma_testapp_files
+  pgdata:
+    name: oma_testapp_pgdata
+  dump:
+    name: oma_testapp_dump

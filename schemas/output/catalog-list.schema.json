@@ -1,0 +1,711 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "const": "catalog list"
+        },
+        "op_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "data": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "type": "string"
+                },
+                "apps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                      },
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "resources": {
+                        "type": "object",
+                        "properties": {
+                          "memory_mb": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "disk_mb": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "memory_mb",
+                          "disk_mb"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "requires": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                        }
+                      },
+                      "main_service": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                      },
+                      "routes": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9-]*$"
+                            },
+                            "service": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                            },
+                            "port": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 65535
+                            },
+                            "host": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "service",
+                            "port",
+                            "host"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "volumes": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_-]*$"
+                            },
+                            "backup": {
+                              "type": "string",
+                              "enum": [
+                                "files",
+                                "skip"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "backup"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "stop_during_backup": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "env": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "pattern": "^[A-Z][A-Z0-9_]*$"
+                            },
+                            "generate": {
+                              "type": "string",
+                              "pattern": "^(password|token):[1-9][0-9]{0,3}$"
+                            },
+                            "value": {
+                              "type": "string"
+                            },
+                            "secret": {
+                              "default": false,
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "secret"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "config_files": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "template": {
+                              "type": "string",
+                              "pattern": "^files\\/"
+                            },
+                            "volume": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "template",
+                            "volume",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "provides": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "capability": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_.-]+$"
+                            },
+                            "outputs": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "required": [
+                            "capability",
+                            "outputs"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "consumes": {
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "capability": {
+                              "type": "string"
+                            },
+                            "required": {
+                              "type": "boolean"
+                            },
+                            "env_prefix": {
+                              "type": "string",
+                              "pattern": "^[A-Z][A-Z0-9_]*$"
+                            },
+                            "default_provider": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                            }
+                          },
+                          "required": [
+                            "capability",
+                            "required",
+                            "env_prefix"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "hooks": {
+                        "type": "object",
+                        "properties": {
+                          "setup": {
+                            "type": "object",
+                            "properties": {
+                              "service": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                              },
+                              "script": {
+                                "type": "string",
+                                "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                              },
+                              "timeout": {
+                                "default": 120,
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              },
+                              "one_off": {
+                                "default": false,
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "service",
+                              "script",
+                              "timeout",
+                              "one_off"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "verify": {
+                            "type": "object",
+                            "properties": {
+                              "service": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                              },
+                              "script": {
+                                "type": "string",
+                                "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                              },
+                              "timeout": {
+                                "default": 120,
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                              },
+                              "one_off": {
+                                "default": false,
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "service",
+                              "script",
+                              "timeout",
+                              "one_off"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "pre_backup": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "service": {
+                                    "type": "string",
+                                    "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                                  },
+                                  "script": {
+                                    "type": "string",
+                                    "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                                  },
+                                  "timeout": {
+                                    "default": 120,
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "one_off": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "service",
+                                  "script",
+                                  "timeout",
+                                  "one_off"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "post_restore": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "service": {
+                                    "type": "string",
+                                    "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                                  },
+                                  "script": {
+                                    "type": "string",
+                                    "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                                  },
+                                  "timeout": {
+                                    "default": 120,
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "one_off": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "service",
+                                  "script",
+                                  "timeout",
+                                  "one_off"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "migrate": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "service": {
+                                    "type": "string",
+                                    "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                                  },
+                                  "script": {
+                                    "type": "string",
+                                    "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                                  },
+                                  "timeout": {
+                                    "default": 120,
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "one_off": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "service",
+                                  "script",
+                                  "timeout",
+                                  "one_off"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "on_link": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "service": {
+                                    "type": "string",
+                                    "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                                  },
+                                  "script": {
+                                    "type": "string",
+                                    "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                                  },
+                                  "timeout": {
+                                    "default": 120,
+                                    "type": "number",
+                                    "exclusiveMinimum": 0
+                                  },
+                                  "one_off": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "service",
+                                  "script",
+                                  "timeout",
+                                  "one_off"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "setup",
+                          "verify"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "ready_timeout": {
+                        "default": 180,
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "version",
+                      "description",
+                      "resources",
+                      "requires",
+                      "main_service",
+                      "routes",
+                      "volumes",
+                      "stop_during_backup",
+                      "env",
+                      "config_files",
+                      "provides",
+                      "consumes",
+                      "hooks",
+                      "ready_timeout"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "bundles": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "version",
+                "apps",
+                "bundles"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "destructive": {
+                  "type": "boolean"
+                },
+                "confirmation": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "command",
+                "targets",
+                "destructive",
+                "confirmation",
+                "steps"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "error": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "command",
+        "op_id",
+        "warnings",
+        "ok",
+        "data",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "const": "catalog list"
+        },
+        "op_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ok": {
+          "type": "boolean",
+          "const": false
+        },
+        "data": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string"
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "destructive": {
+                  "type": "boolean"
+                },
+                "confirmation": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "command",
+                "targets",
+                "destructive",
+                "confirmation",
+                "steps"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "hint": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "details"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "command",
+        "op_id",
+        "warnings",
+        "ok",
+        "data",
+        "error"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+id: testclient
+name: Test Client
+version: 1.0.0
+description: Capability-link consumer fixture
+resources:
+  memory_mb: 128
+  disk_mb: 64
+requires:
+  - traefik
+main_service: testclient
+routes:
+  - name: web
+    service: testclient
+    port: 3000
+    host: "{appId}.{base_domain}"
+consumes:
+  - capability: notes.api
+    required: true
+    env_prefix: NOTES_
+    default_provider: testapp
+hooks:
+  setup:
+    service: testclient
+    script: hooks/setup.sh
+    timeout: 120
+  verify:
+    service: testclient
+    script: hooks/verify.sh
+    timeout: 60
+  on_link:
+    service: testclient
+    script: hooks/setup.sh
+    timeout: 120
+ready_timeout: 30

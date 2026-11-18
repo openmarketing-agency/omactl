@@ -1,0 +1,25 @@
+id: traefik
+name: Traefik
+version: 3.6.2
+description: File-provider ingress; never mounts the Docker socket
+resources:
+  memory_mb: 128
+  disk_mb: 128
+main_service: traefik
+volumes:
+  - key: config
+    backup: files
+  - key: dynamic
+    backup: files
+  - key: acme
+    backup: files
+hooks:
+  setup:
+    service: traefik
+    script: hooks/setup.sh
+    timeout: 120
+  verify:
+    service: traefik
+    script: hooks/verify.sh
+    timeout: 120
+ready_timeout: 60

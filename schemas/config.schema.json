@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "instance_id": {
+      "type": "string"
+    },
+    "base_domain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "http_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "https_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "tls": {
+          "type": "string",
+          "enum": [
+            "off",
+            "acme"
+          ]
+        },
+        "acme_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "http_port",
+        "https_port",
+        "tls",
+        "acme_email"
+      ],
+      "additionalProperties": false
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "stable",
+        "canary",
+        "pinned"
+      ]
+    },
+    "release_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "updates": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "notify",
+        "off"
+      ]
+    },
+    "backup": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy": {
+          "type": "string",
+          "enum": [
+            "self-managed",
+            "central"
+          ]
+        },
+        "nightly_window": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}-\\d{2}:\\d{2}$"
+        }
+      },
+      "required": [
+        "repository",
+        "policy",
+        "nightly_window"
+      ],
+      "additionalProperties": false
+    },
+    "heartbeat": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "instance_id",
+    "base_domain",
+    "ingress",
+    "channel",
+    "release_url",
+    "updates",
+    "backup",
+    "heartbeat"
+  ],
+  "additionalProperties": false
+}

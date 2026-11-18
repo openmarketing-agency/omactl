@@ -1,0 +1,55 @@
+id: testapp
+name: Test App
+version: 2.0.0
+description: Stateful PostgreSQL and files fixture
+resources:
+  memory_mb: 256
+  disk_mb: 512
+requires:
+  - traefik
+main_service: testapp
+routes:
+  - name: web
+    service: testapp
+    port: 3000
+    host: "{appId}.{base_domain}"
+volumes:
+  - key: files
+    backup: files
+  - key: pgdata
+    backup: skip
+  - key: dump
+    backup: files
+stop_during_backup: false
+env:
+  - name: POSTGRES_PASSWORD
+    generate: password:32
+    secret: true
+  - name: TESTAPP_BOOTSTRAP_TOKEN
+    generate: token:32
+    secret: true
+  - name: PUBLIC_URL
+    value: "{url:web}"
+provides:
+  - capability: notes.api
+    outputs:
+      url: http://{appId}:3000
+      api_key: "{output:TESTAPP_API_KEY}"
+hooks:
+  setup:
+    service: testapp
+    script: hooks/setup.sh
+    timeout: 120
+  verify:
+    service: testapp
+    script: hooks/verify.sh
+    timeout: 60
+  pre_backup:
+    service: db
+    script: hooks/dump.sh
+    timeout: 300
+  post_restore:
+    service: db
+    script: hooks/load.sh
+    timeout: 300
+ready_timeout: 30

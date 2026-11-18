@@ -1,0 +1,4 @@
+id: notes-demo
+apps:
+  - testapp
+  - testclient

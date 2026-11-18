@@ -1,0 +1,23 @@
+services:
+  traefik:
+    image: traefik:v3.6.2@sha256:aaf0f6185419a50c74651448c1a5bf4606bd2d2ddb7b8749eed505d55bf8b8ea
+    volumes:
+      - config:/etc/traefik:ro
+      - dynamic:/etc/traefik/dynamic:ro
+      - acme:/acme
+    healthcheck:
+      test:
+        - CMD
+        - traefik
+        - healthcheck
+        - --ping
+      interval: 1s
+      timeout: 3s
+      retries: 30
+volumes:
+  config:
+    name: oma_traefik_config
+  dynamic:
+    name: oma_traefik_dynamic
+  acme:
+    name: oma_traefik_acme

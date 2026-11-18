@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.e2e/
+/schemas/
+/catalog/
+fixtures/catalog-*/
+omactl build spec v1.md
+bun.lock

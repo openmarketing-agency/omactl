@@ -1,0 +1,17 @@
+services:
+  testclient:
+    image: omactl-testapp:2.0.0
+    environment:
+      MODE: client
+      NOTES_URL: ${NOTES_URL}
+      NOTES_API_KEY: ${NOTES_API_KEY}
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -qO-
+        - http://localhost:3000/healthz
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 2s

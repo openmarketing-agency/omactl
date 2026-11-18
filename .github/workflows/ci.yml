@@ -1,0 +1,60 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run lint && bun run typecheck && bun test test/unit
+      - run: bun run schemas && git diff --exit-code -- schemas
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+        env:
+          OMA_RELEASE_PUBLIC_KEYS: ${{ vars.OMA_RELEASE_PUBLIC_KEYS || '[]' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist/omactl-*
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: docker version --format json && docker compose version --format json
+      - run: docker build --build-arg APP_VERSION=1.0.0 -t omactl-testapp:1.0.0 fixtures/testapp
+      - run: docker build --build-arg APP_VERSION=2.0.0 -t omactl-testapp:2.0.0 fixtures/testapp
+      - run: OMA_E2E=1 bun run test:e2e
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-journals-${{ matrix.os }}
+          path: |
+            .e2e/acceptance/state/ops/
+            .e2e/acceptance/logs/

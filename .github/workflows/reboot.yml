@@ -1,0 +1,59 @@
+name: Nightly real reboot
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  reboot:
+    # Supply an Ubuntu AMI with Docker, Compose, Bun 1.4.4, and the ops SSH key baked in; enable systemd user lingering for ops.
+    if: ${{ vars.OMA_REBOOT_AMI != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: reboot-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.OMA_REBOOT_AWS_ROLE }}
+          aws-region: ${{ vars.OMA_REBOOT_AWS_REGION }}
+      - name: Create disposable cloud VM
+        env:
+          AMI: ${{ vars.OMA_REBOOT_AMI }}
+          SUBNET: ${{ vars.OMA_REBOOT_SUBNET }}
+          SECURITY_GROUP: ${{ vars.OMA_REBOOT_SECURITY_GROUP }}
+          KEY_NAME: ${{ vars.OMA_REBOOT_KEY_NAME }}
+        run: |
+          id=$(aws ec2 run-instances --image-id "$AMI" --instance-type t3.medium --subnet-id "$SUBNET" --security-group-ids "$SECURITY_GROUP" --key-name "$KEY_NAME" --associate-public-ip-address --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=omactl-nightly-reboot}]' --query 'Instances[0].InstanceId' --output text)
+          echo "INSTANCE_ID=$id" >> "$GITHUB_ENV"
+          aws ec2 wait instance-status-ok --instance-ids "$id"
+          ip=$(aws ec2 describe-instances --instance-ids "$id" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          echo "VM_IP=$ip" >> "$GITHUB_ENV"
+      - name: Install fixture and boot jobs
+        env:
+          SSH_KEY: ${{ secrets.OMA_REBOOT_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/oma-reboot
+          chmod 600 ~/.ssh/oma-reboot
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
+          tar --exclude=.git --exclude=node_modules --exclude=dist --exclude=.e2e -czf /tmp/omactl-source.tgz .
+          scp -i ~/.ssh/oma-reboot /tmp/omactl-source.tgz "ops@$VM_IP:/tmp/omactl-source.tgz"
+          ssh -i ~/.ssh/oma-reboot "ops@$VM_IP" 'mkdir -p ~/omactl && cd ~/omactl && tar -xzf /tmp/omactl-source.tgz && bun install --frozen-lockfile && bun run build --current && docker build --build-arg APP_VERSION=1.0.0 -t omactl-testapp:1.0.0 fixtures/testapp && ./dist/omactl-linux-x64 init --catalog catalog --http-port 18080 && ./dist/omactl-linux-x64 install --bundle notes-demo && ./dist/omactl-linux-x64 schedule install && ./dist/omactl-linux-x64 verify --all --json && docker compose -p oma-testapp --env-file ~/.oma/apps/testapp/.env -f ~/.oma/apps/testapp/compose.yml -f ~/.oma/apps/testapp/compose.generated.yml down'
+      - name: Reboot and verify automatic repair
+        run: |
+          aws ec2 reboot-instances --instance-ids "$INSTANCE_ID"
+          sleep 45
+          aws ec2 wait instance-status-ok --instance-ids "$INSTANCE_ID"
+          for attempt in $(seq 1 30); do
+            if ssh -i ~/.ssh/oma-reboot "ops@$VM_IP" 'cd ~/omactl && ./dist/omactl-linux-x64 status --json' > /tmp/oma-reboot-status.json; then
+              if node -e 'const s=require("/tmp/oma-reboot-status.json"); process.exit(s.ok && s.data.apps.every(a=>a.containers.length && a.containers.every(c=>c.State==="running" && (!c.Health || c.Health==="healthy"))) ? 0 : 1)'; then exit 0; fi
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Terminate cloud VM
+        if: always() && env.INSTANCE_ID != ''
+        run: aws ec2 terminate-instances --instance-ids "$INSTANCE_ID"
