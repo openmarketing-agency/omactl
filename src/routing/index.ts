@@ -11,6 +11,7 @@ export async function templateContext(
   m: AppManifest,
   env: Record<string, string> = {},
   links: Record<string, Record<string, string>> = {},
+  publicUrls = true,
 ): Promise<TemplateContext> {
   const config = await ctx.config();
   const base: TemplateContext = {
@@ -30,11 +31,17 @@ export async function templateContext(
       url: `${secure ? 'https' : 'http'}://${host}${port === (secure ? 443 : 80) ? '' : `:${port}`}`,
     };
   }
+  if (publicUrls) {
+    const tunnel = (await ctx.app(m.id).catch(() => null))?.tunnel;
+    const route = m.routes[0];
+    if (tunnel && route)
+      base.routes![route.name] = { host: new URL(tunnel.url).hostname, url: tunnel.url };
+  }
   return base;
 }
 export async function renderRoutes(ctx: Context, app: InstalledApp) {
   const config = await ctx.config();
-  const templates = await templateContext(ctx, app.manifest);
+  const templates = await templateContext(ctx, app.manifest, {}, {}, false);
   const routers: any = {},
     services: any = {};
   for (const route of app.manifest.routes) {
@@ -51,6 +58,15 @@ export async function renderRoutes(ctx: Context, app: InstalledApp) {
       loadBalancer: { servers: [{ url: `http://${route.service}:${route.port}` }] },
     };
   }
+  if (app.tunnel && app.manifest.routes[0]) {
+    const route = app.manifest.routes[0];
+    routers[`${app.id}-tunnel`] = {
+      rule: `Host(\`${new URL(app.tunnel.url).hostname}\`)`,
+      entryPoints: ['web'],
+      service: `${app.id}-${route.name}`,
+      middlewares: [`${app.id}-identity`, `${app.id}-tunnel-https`],
+    };
+  }
   const file = ctx.p('system', 'traefik', 'dynamic', `${app.id}.yml`);
   if (app.manifest.routes.length)
     await write(
@@ -60,6 +76,19 @@ export async function renderRoutes(ctx: Context, app: InstalledApp) {
           routers,
           services,
           middlewares: {
+            ...(app.tunnel
+              ? {
+                  [`${app.id}-tunnel-https`]: {
+                    headers: {
+                      customRequestHeaders: {
+                        'X-Forwarded-Proto': 'https',
+                        'X-Forwarded-Port': '443',
+                        'X-Forwarded-Host': new URL(app.tunnel.url).hostname,
+                      },
+                    },
+                  },
+                }
+              : {}),
             [`${app.id}-identity`]: {
               headers: {
                 customResponseHeaders: {
@@ -90,9 +119,16 @@ export async function syncRoutes(ctx: Context) {
       const { parse } = await import('yaml');
       const expected = parse(files[app.id + '.yml']).http.middlewares[`${app.id}-identity`].headers
         .customResponseHeaders['X-OMA-Route-Version'];
-      const t = await templateContext(ctx, app.manifest);
-      for (const route of app.manifest.routes) {
-        const secure = config.ingress.tls === 'acme',
+      const t = await templateContext(ctx, app.manifest, {}, {}, false);
+      const probes = app.manifest.routes.map((route) => ({
+        name: route.name,
+        host: t.routes![route.name].host,
+        secure: config.ingress.tls === 'acme',
+      }));
+      if (app.tunnel)
+        probes.push({ name: 'tunnel', host: new URL(app.tunnel.url).hostname, secure: false });
+      for (const route of probes) {
+        const secure = route.secure,
           port = secure ? config.ingress.https_port : config.ingress.http_port;
         const end = Date.now() + Math.min(ctx.timeout, 15000);
         let ready = false;
@@ -100,7 +136,7 @@ export async function syncRoutes(ctx: Context) {
           try {
             const response = await fetch(`${secure ? 'https' : 'http'}://127.0.0.1:${port}/`, {
               method: 'HEAD',
-              headers: { Host: t.routes![route.name].host },
+              headers: { Host: route.host },
               redirect: 'manual',
               signal: AbortSignal.timeout(2000),
               ...(secure ? { tls: { rejectUnauthorized: false } } : {}),

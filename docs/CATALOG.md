@@ -30,3 +30,10 @@ docker build --build-arg APP_VERSION=2.0.0 -t omactl-testapp:2.0.0 fixtures/test
 ```
 
 A release archive contains `catalog.json`, `system/`, `apps/`, and `bundles/` directly at its root. It must contain regular files/directories only, with no symlinks, absolute paths, or traversal. Release CI validates the catalog before signing it.
+
+Apps can declare an optional `on_public_url` hook. `omactl tunnel <app>` runs it
+after applying the app's new public URL and recreating its containers, before
+functional verification. Use it to update URLs persisted inside the app's database;
+ordinary setup hooks should continue preserving customized settings. The first
+route's `{url:<route>}` and `{host:<route>}` resolve to the tunnel's public HTTPS
+address while a tunnel is configured. Runtime routing retains the original host.

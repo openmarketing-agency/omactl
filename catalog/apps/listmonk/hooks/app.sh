@@ -23,10 +23,10 @@ async function api(path, method = 'GET', body) {
 await request('/admin/login');
 const login = await request('/admin/login', { method: 'POST', body: new URLSearchParams({ username: process.env.LISTMONK_ADMIN_USER, password: process.env.LISTMONK_ADMIN_PASSWORD, next: '/admin' }) });
 if (login.status !== 302) throw new Error('Listmonk administrator login failed');
-if (process.env.OMA_HOOK === 'setup') {
+if (['setup', 'on_public_url'].includes(process.env.OMA_HOOK)) {
   try {
     const settings = await api('/settings');
-    if (settings['app.root_url'] === 'http://localhost:9000') {
+    if (process.env.OMA_HOOK === 'on_public_url' || settings['app.root_url'] === 'http://localhost:9000') {
       settings['app.root_url'] = process.env.PUBLIC_URL;
       await api('/settings', 'PUT', settings);
     }

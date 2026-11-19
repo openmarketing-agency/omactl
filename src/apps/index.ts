@@ -1,3 +1,4 @@
+import { removeTunnel } from '../tunnel';
 import { Context } from '../core/context';
 import { fs, path, exists, readEnv, saveEnv, now, write } from '../core/fs';
 import { resolveOrder, fingerprint } from '../catalog';
@@ -229,8 +230,10 @@ export async function lifecycle(
         await backupBeforeChange(ctx, app.id, op);
         app.last_backup = (await ctx.app(app.id)).last_backup;
         await op.step(`${command} ${app.id}`, async () => {
-          if (command === 'stop') await compose(ctx, app.id, ['stop']);
-          else if (command === 'restart') {
+          if (command === 'stop') {
+            if (app.tunnel) await removeTunnel(ctx, app.id);
+            await compose(ctx, app.id, ['stop']);
+          } else if (command === 'restart') {
             await compose(ctx, app.id, ['stop']);
             await up(ctx, app.id);
           } else await up(ctx, app.id);
@@ -326,6 +329,7 @@ export async function remove(ctx: Context, id: string, options: any) {
         `${id} has consumers: ${consumers.map((a) => a.id).join(', ')}`,
       );
       await backupBeforeChange(ctx, id, op, 'pre-remove', true);
+      if (app.tunnel) await removeTunnel(ctx, id);
       await compose(ctx, id, ['down', ...(options.purge ? ['--volumes'] : [])]);
       if (options.purge)
         for (const v of app.manifest.volumes)
