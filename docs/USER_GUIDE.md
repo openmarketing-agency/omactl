@@ -2,7 +2,7 @@
 
 omactl manages the self-hosted apps in one Open Marketing Agency (OMA) instance. It installs apps from a catalog, runs functional checks, manages routing and connections between apps, takes backups, restores data, and applies updates with rollback.
 
-This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. The fixtures expose HTTP APIs.
+This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), [Umami](../catalog/apps/umami/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. Umami tracks website analytics. The fixtures expose HTTP APIs.
 
 ## Contents
 
@@ -234,6 +234,19 @@ omactl credentials wordpress
 ```
 
 The site uses the `wordpress` host under your instance base domain; its admin login is `/wp-admin/`. Read the [WordPress catalog guide](../catalog/apps/wordpress/README.md) for settings, credentials, backups, and upgrades. Existing instances need a catalog release containing the new entry; rerunning `init --catalog` does not refresh them.
+
+### Install Umami
+
+Once the instance catalog includes the Umami entry:
+
+```sh
+omactl install umami --plan
+omactl install umami
+omactl verify umami
+omactl credentials umami
+```
+
+Open the `umami` host under your instance base domain and log in as `admin` with the generated `UMAMI_ADMIN_PASSWORD`. Setup replaces the upstream default password. Add a website in the dashboard and copy its tracking script into your site. Read the [Umami catalog guide](../catalog/apps/umami/README.md) for tracking, credentials, verification, and backups.
 
 ### Start, stop, and restart
 
