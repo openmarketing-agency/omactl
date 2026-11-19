@@ -32,3 +32,9 @@ Full acceptance on native Linux x64/arm64 CI, a physical reboot, macOS x64 execu
 ## WordPress catalog addition
 
 The WordPress entry was checked with 23 passing unit tests, catalog lint, type checking, and portability lint. A separate real-Docker integration test passed on macOS arm64/Docker Desktop: install, functional REST/database/upload checks, repeated setup with stable credentials, core-file migration preserving content, and recovery of a persistent post and upload after deletion of the MariaDB data volume. The test also checked generated secrets against operation journals and logs. The Linux x64/arm64 CI matrix now includes this WordPress integration test; those new CI runs have not been executed in this workspace.
+
+## Ghost catalog addition
+
+The Ghost entry passed manifest loading, named-volume and hook-service checks, shell and Node syntax checks, Compose configuration validation, type checking, portability lint, and the existing 23 unit tests. Registry indexes for Ghost 6.78.0 Alpine and MySQL 8.0 were checked for Linux amd64 and arm64. A Docker integration test was added to the Linux x64/arm64 CI matrix for repeated setup, database writes, image serving, temporary-file cleanup, and recovery of settings and content after database-volume loss.
+
+The host still had only about 203 MB free after Docker storage errors, so Ghost images were not pulled and the runtime integration test was not run locally. Full Docker-backed catalog lint and the new CI runs remain pending. Ghost owner signup is intentionally a browser step and is not automated or covered by this integration test.
