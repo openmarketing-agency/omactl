@@ -39,6 +39,14 @@ The Ghost entry passed manifest loading, named-volume and hook-service checks, s
 
 The host still had only about 203 MB free after Docker storage errors, so Ghost images were not pulled and the runtime integration test was not run locally. Full Docker-backed catalog lint and the new CI runs remain pending. Ghost owner signup is intentionally a browser step and is not automated or covered by this integration test.
 
+## Umami catalog addition
+
+The Umami entry passed manifest loading, named-volume checks, shell and Node syntax checks, Compose configuration validation, type checking, portability lint, and the existing 23 unit tests. Registry indexes for Umami 3.5.0 and PostgreSQL 17 were checked for Linux amd64 and arm64. A Docker integration test was added for default-password replacement, repeated setup, pageview collection and reporting, cleanup, and recovery after PostgreSQL volume loss; CI runs it on both Linux architectures.
+
+The local Docker integration attempt could not start Umami because the host disk was full and Docker's image store reported input/output errors while pulling the image. Full catalog lint also encountered those Docker storage errors. Runtime setup, analytics, and restore checks remain unverified locally; the new CI runs have not been executed in this workspace.
+
+The original pull-request CI completed successfully on Linux x64 and arm64 (including the app integration test), with unit jobs also passing on macOS. After merging the Ghost catalog changes from main, type checking, portability lint, and unit tests were rerun locally; the merge update triggers a fresh CI run.
+
 ## Listmonk catalog addition
 
 The Listmonk entry passed catalog lint with the local-image exception needed by the existing fixtures, type checking, and portability lint. Its Docker integration test passed on macOS arm64/Docker Desktop using a unique temporary project alongside the existing WordPress instance. It checked initial public URL setup, repeated setup and administrator login, list/subscriber API creation and readback with cleanup, upload persistence, and logical database restore after deleting the temporary PostgreSQL data volume. Image indexes were checked for Linux amd64 and arm64. CI includes this integration test on both Linux architectures; those CI runs have not been executed in this workspace.

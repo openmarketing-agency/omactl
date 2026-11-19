@@ -2,7 +2,7 @@
 
 omactl manages the self-hosted apps in one Open Marketing Agency (OMA) instance. It installs apps from a catalog, runs functional checks, manages routing and connections between apps, takes backups, restores data, and applies updates with rollback.
 
-This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), [Ghost](../catalog/apps/ghost/README.md), [Listmonk](../catalog/apps/listmonk/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. Ghost provides a publishing site and admin interface. Listmonk manages newsletters and mailing lists. The fixtures expose HTTP APIs.
+This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), [Ghost](../catalog/apps/ghost/README.md), [Umami](../catalog/apps/umami/README.md), [Listmonk](../catalog/apps/listmonk/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. Ghost provides a publishing site and admin interface. Umami tracks website analytics. Listmonk manages newsletters and mailing lists. The fixtures expose HTTP APIs.
 
 ## Contents
 
@@ -246,6 +246,19 @@ omactl verify ghost
 ```
 
 Open `/ghost/` on the `ghost` host under your instance base domain and create the site owner in your browser. Owner signup is required; `credentials ghost` shows database credentials rather than the owner password. Configure SMTP before relying on staff verification or password-reset emails. Read the [Ghost catalog guide](../catalog/apps/ghost/README.md) for deployment, verification, and backups.
+
+### Install Umami
+
+Once the instance catalog includes the Umami entry:
+
+```sh
+omactl install umami --plan
+omactl install umami
+omactl verify umami
+omactl credentials umami
+```
+
+Open the `umami` host under your instance base domain and log in as `admin` with the generated `UMAMI_ADMIN_PASSWORD`. Setup replaces the upstream default password. Add a website in the dashboard and copy its tracking script into your site. Read the [Umami catalog guide](../catalog/apps/umami/README.md) for tracking, credentials, verification, and backups.
 
 ### Install Listmonk
 
