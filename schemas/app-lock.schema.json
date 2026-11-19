@@ -438,6 +438,42 @@
                   "type": "null"
                 }
               ]
+            },
+            "on_public_url": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "service": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]{1,30}$"
+                    },
+                    "script": {
+                      "type": "string",
+                      "pattern": "^hooks\\/[a-zA-Z0-9._/-]+\\.sh$"
+                    },
+                    "timeout": {
+                      "default": 120,
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "one_off": {
+                      "default": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "service",
+                    "script",
+                    "timeout",
+                    "one_off"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [
@@ -511,6 +547,26 @@
           "type": "string"
         }
       }
+    },
+    "tunnel": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https:\\/\\/[a-z0-9-]+\\.trycloudflare\\.com$"
+        },
+        "configured": {
+          "type": "boolean"
+        },
+        "started_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "configured"
+      ],
+      "additionalProperties": false
     },
     "outputs": {
       "type": "array",

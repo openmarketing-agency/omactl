@@ -77,6 +77,7 @@ export const Manifest = z
       post_restore: Hook.nullable().optional(),
       migrate: Hook.nullable().optional(),
       on_link: Hook.nullable().optional(),
+      on_public_url: Hook.nullable().optional(),
     }),
     ready_timeout: z.number().int().positive().default(180),
   })
@@ -121,6 +122,13 @@ export const AppLock = z.object({
   state: z.enum(['running', 'stopped', 'failed', 'degraded', 'needs_human']),
   links: z.record(z.string(), AppId),
   domains: z.record(z.string(), z.array(z.string())),
+  tunnel: z
+    .object({
+      url: z.string().regex(/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/),
+      configured: z.boolean(),
+      started_at: z.string().optional(),
+    })
+    .optional(),
   outputs: z.array(z.string()),
   installed_at: z.string(),
   updated_at: z.string(),
@@ -185,6 +193,7 @@ export const dataSchemas = {
   }),
   'catalog show': Manifest,
   'catalog lint': z.object({ valid: z.boolean(), errors: z.array(z.string()), apps: z.number() }),
+  tunnel: z.object({ app: AppId, url: z.url(), reused: z.boolean() }),
   install: z.object({ results: z.array(Result) }),
   remove: z.object({ app: z.string(), purged: z.boolean() }),
   start: z.object({ results: z.array(Result) }),

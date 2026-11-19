@@ -10,6 +10,7 @@ This guide covers the v1 tool in this repository. The current catalog contains T
 - [Build and install](#build-and-install)
 - [First setup](#first-setup)
 - [Everyday operations](#everyday-operations)
+- [Temporary public URLs with Cloudflare](#temporary-public-urls-with-cloudflare)
 - [Connect apps and manage domains](#connect-apps-and-manage-domains)
 - [Backups and restore](#backups-and-restore)
 - [Local overrides](#local-overrides)
@@ -320,6 +321,52 @@ omactl credentials testapp
 ```
 
 This intentionally prints the app's environment values and captured setup outputs, including secrets. It is the only command intended to expose secrets. Keep its output out of shared logs, screenshots, issue reports, and shell command arguments. Ordinary logs, errors, journals, and JSON output redact known secrets.
+
+## Temporary public URLs with Cloudflare
+
+After installing an app, run a separate command to give it a public HTTPS URL:
+
+```sh
+omactl tunnel wordpress --plan
+omactl tunnel wordpress
+```
+
+The command prints a URL such as `https://four-random-words.trycloudflare.com`.
+No domain, DNS changes, Cloudflare account, or separate `cloudflared` installation
+is needed. omactl runs a pinned official cloudflared image in a detached Docker
+container on `oma_edge`, forwarding traffic through Traefik to the app's first web
+route. Your machine needs outbound Internet access to Cloudflare.
+
+The command is idempotent: rerunning it reuses the running tunnel and prints the
+same URL. Each app gets its own tunnel:
+
+```sh
+omactl tunnel ghost
+omactl tunnel listmonk
+omactl tunnel umami
+omactl tunnel wordpress --json
+```
+
+JSON output includes `data.app`, `data.url`, and `data.reused`. The tunnel's URL
+and configuration state are also saved in the app lock file and available through
+`omactl status wordpress --json`.
+
+omactl configures the app to use the public HTTPS URL, including WordPress's
+`home` and `siteurl`, Ghost's canonical URL, and Listmonk's root URL. It recreates
+affected app containers, updates routes, and runs functional verification when
+applying a new URL. Existing credentials and local Compose overrides are retained.
+A configured backup repository is used before changing the URL; otherwise the
+command warns that no pre-change backup was taken. Existing local hostnames remain
+routed, although an app that uses a canonical URL may redirect visitors to its new
+public address. Ghost owner signup is still required on a new installation.
+
+**Quick Tunnel URLs are temporary.** Keep Docker and the cloudflared container
+running. After a machine/Docker restart or a stopped/exited tunnel, rerun
+`omactl tunnel <app>` to create a new URL and update the app. omactl deliberately
+does not automatically restart cloudflared because its new URL must also be applied
+to the app. `omactl stop <app>` and `omactl remove <app>` remove its tunnel container;
+starting the app again does not recreate the tunnel until you run the tunnel command.
+Use a named Cloudflare Tunnel with a domain when you need a stable address.
 
 ## Connect apps and manage domains
 
@@ -765,6 +812,7 @@ Run `omactl --help` for the full command list and `omactl <command> --help` for 
 | `verify [apps...]`                                             | Run functional checks; `--repair` attempts recovery of desired-running apps      |
 | `setup <app>`                                                  | Rerun its idempotent setup hook                                                  |
 | `link <consumer> <provider>` / `unlink`                        | Manage capability connections                                                    |
+| `tunnel <app>`                                               | Create or reuse a temporary public Cloudflare HTTPS URL                          |
 | `domain add`, `domain remove`, `domain list`                   | Manage extra hostnames per app route                                             |
 | `credentials <app>`                                            | Intentionally display app secrets and outputs                                    |
 | `exec <app> -- <command...>`                                   | Execute inside an app service                                                    |

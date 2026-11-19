@@ -37,6 +37,10 @@ hooks:
     service: verify
     script: hooks/app.sh
     timeout: 120
+  on_public_url:
+    service: verify
+    script: hooks/app.sh
+    timeout: 120
   verify:
     service: verify
     script: hooks/app.sh

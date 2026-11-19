@@ -56,3 +56,7 @@ The original pull-request CI completed successfully on Linux x64 and arm64 (incl
 ## MySQL initialization fix for the Listmonk PR
 
 The combined suite exposed a Ghost database startup failure before the Listmonk test ran. The Ghost Compose definition exported the database user's password as `MYSQL_PWD` for the whole container, which also affected the official MySQL entrypoint's initial passwordless root connection. The password is now scoped to healthcheck, dump, restore, and test-client processes. The Ghost integration test captures redacted container logs before teardown on failure. Type checking, portability lint, 23 unit tests, and Compose healthcheck/environment checks passed locally; the Docker daemon was unresponsive, so end-to-end validation runs in CI.
+
+## Cloudflare Quick Tunnels
+
+The `tunnel <app>` command passed type checking, portability lint, the native executable build, and all 33 unit tests. Tunnel tests cover URL parsing, connection readiness, pinned image configuration, running-tunnel reuse, stale-container replacement, ownership checks, timeout cleanup, public/local routing, credential and metadata preservation, dry-run behavior, and CLI retries after failed app verification. The CLI tests use a fake Docker executable; a live Cloudflare connection and public browser access have not been exercised.

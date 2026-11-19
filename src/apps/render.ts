@@ -65,6 +65,7 @@ export async function renderApp(
     state: previous?.state ?? 'running',
     links: options.links ?? previous?.links ?? {},
     domains: previous?.domains ?? {},
+    tunnel: previous?.tunnel,
     outputs: previous?.outputs ?? [],
     installed_at: previous?.installed_at ?? now(),
     updated_at: now(),

@@ -26,6 +26,7 @@ import {
   targets,
 } from '../apps';
 import { hook } from '../apps/hooks';
+import { tunnel } from '../tunnel';
 import { compose, followLogs, docker } from '../docker';
 import {
   backupApp,
@@ -171,6 +172,7 @@ command(program, 'remove <app>', 'remove', (c) => c.option('--purge').option('--
 for (const cmd of ['start', 'stop', 'restart'] as const)
   command(program, `${cmd} [apps...]`, cmd, (c) => c.option('--all'));
 command(program, 'status [app]', 'status');
+command(program, 'tunnel <app>', 'tunnel');
 command(program, 'logs <app>', 'logs', (c) =>
   c
     .option('--service <service>')
@@ -331,6 +333,8 @@ async function dispatch(name: CommandName, ctx: Context, args: any[], o: any): P
     case 'stop':
     case 'restart':
       return lifecycle(ctx, name, id, o);
+    case 'tunnel':
+      return tunnel(ctx, id);
     case 'status':
       return status(ctx, id);
     case 'verify':

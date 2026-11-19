@@ -12,6 +12,7 @@ export function readable(envelope: any): string {
   if (command === 'version')
     return `omactl ${data.version}\nCatalog: ${data.catalog ?? 'not installed'}\nPlatform: ${data.platform} (tier ${data.support_tier})\n`;
   if (command === 'doctor') return `Support tier: ${data.support_tier}\n` + checks(data.checks);
+  if (command === 'tunnel') return data.url + '\n';
   if (command === 'logs') return data.logs;
   if (command === 'exec') return data.stdout + data.stderr;
   if (command === 'status')
@@ -19,7 +20,7 @@ export function readable(envelope: any): string {
       data.apps
         .map(
           (app: any) =>
-            `${app.id.padEnd(18)} ${app.version.padEnd(12)} ${app.state} (desired: ${app.desired_state})\n  Containers: ${app.containers.map((c: any) => `${c.Service}=${c.Health || c.State}`).join(', ') || 'none'}; override: ${app.override ? 'yes' : 'no'}\n  Verify: ${app.last_verify ? `${app.last_verify.ok ? 'passed' : 'failed'} ${app.last_verify.at}` : 'never'}; backup: ${app.last_backup?.at ?? 'never'}\n`,
+            `${app.id.padEnd(18)} ${app.version.padEnd(12)} ${app.state} (desired: ${app.desired_state})\n  Containers: ${app.containers.map((c: any) => `${c.Service}=${c.Health || c.State}`).join(', ') || 'none'}; override: ${app.override ? 'yes' : 'no'}\n  Verify: ${app.last_verify ? `${app.last_verify.ok ? 'passed' : 'failed'} ${app.last_verify.at}` : 'never'}; backup: ${app.last_backup?.at ?? 'never'}\n${app.tunnel ? `  Quick Tunnel: ${app.tunnel.url} (${app.tunnel.configured ? 'configured' : 'configuration incomplete'})\n` : ''}`,
         )
         .join('') +
       (data.orphaned_volumes.length

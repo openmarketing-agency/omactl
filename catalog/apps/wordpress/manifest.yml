@@ -69,6 +69,10 @@ hooks:
     service: wpcli
     script: hooks/setup.sh
     timeout: 180
+  on_public_url:
+    service: wpcli
+    script: hooks/public-url.sh
+    timeout: 120
   verify:
     service: wpcli
     script: hooks/verify.sh
