@@ -2,7 +2,7 @@
 
 omactl manages the self-hosted apps in one Open Marketing Agency (OMA) instance. It installs apps from a catalog, runs functional checks, manages routing and connections between apps, takes backups, restores data, and applies updates with rollback.
 
-This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), [Ghost](../catalog/apps/ghost/README.md), [Umami](../catalog/apps/umami/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. Ghost provides a publishing site and admin interface. Umami tracks website analytics. The fixtures expose HTTP APIs.
+This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), [Ghost](../catalog/apps/ghost/README.md), [Umami](../catalog/apps/umami/README.md), [Listmonk](../catalog/apps/listmonk/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. Ghost provides a publishing site and admin interface. Umami tracks website analytics. Listmonk manages newsletters and mailing lists. The fixtures expose HTTP APIs.
 
 ## Contents
 
@@ -259,6 +259,19 @@ omactl credentials umami
 ```
 
 Open the `umami` host under your instance base domain and log in as `admin` with the generated `UMAMI_ADMIN_PASSWORD`. Setup replaces the upstream default password. Add a website in the dashboard and copy its tracking script into your site. Read the [Umami catalog guide](../catalog/apps/umami/README.md) for tracking, credentials, verification, and backups.
+
+### Install Listmonk
+
+Once the instance catalog includes the Listmonk entry:
+
+```sh
+omactl install listmonk --plan
+omactl install listmonk
+omactl verify listmonk
+omactl credentials listmonk
+```
+
+Open `/admin` on the `listmonk` host under your instance base domain. The default administrator is `oma-admin` with a generated password. Configure SMTP and the sender address in Settings before sending mail. Read the [Listmonk catalog guide](../catalog/apps/listmonk/README.md) for settings, verification, and backup details.
 
 ### Start, stop, and restart
 

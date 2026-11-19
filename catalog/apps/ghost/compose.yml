@@ -33,13 +33,14 @@ services:
       MYSQL_DATABASE: ghost
       MYSQL_USER: ghost
       MYSQL_PASSWORD: ${GHOST_DB_PASSWORD}
-      MYSQL_PWD: ${GHOST_DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - dbdata:/var/lib/mysql
       - dump:/dump
     healthcheck:
-      test: [CMD, mysql, --protocol=TCP, --host=127.0.0.1, --user=ghost, --database=ghost, --execute=SELECT 1]
+      test:
+        - CMD-SHELL
+        - 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=TCP --host=127.0.0.1 --user=ghost --database=ghost --execute="SELECT 1"'
       interval: 5s
       timeout: 5s
       retries: 36

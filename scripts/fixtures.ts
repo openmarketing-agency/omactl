@@ -55,7 +55,7 @@ const main = async (root: string, version: string, broken = false) => {
   await writeJson(path.join(root, 'catalog.json'), {
     version:
       root === 'catalog'
-        ? '2026.11.19-2'
+        ? '2026.11.19-3'
         : version === '1.0.0'
           ? '2026.11.17-1'
           : broken

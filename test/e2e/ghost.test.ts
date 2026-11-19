@@ -58,11 +58,9 @@ scenario(
           'exec',
           '-T',
           'db',
-          'mysql',
-          '--user=ghost',
-          '--database=ghost',
-          '--batch',
-          '--skip-column-names',
+          'sh',
+          '-c',
+          'export MYSQL_PWD="$MYSQL_PASSWORD"; exec mysql --user=ghost --database=ghost --batch --skip-column-names',
         ],
         query,
       );
@@ -103,6 +101,12 @@ scenario(
           'find /var/lib/ghost/content/images -name "omactl-verify-*" -print\n',
         ),
       ).toBe('');
+    } catch (error) {
+      let logs = await compose(['logs', '--no-color', '--tail', '120']).catch(
+        () => 'Container logs unavailable.',
+      );
+      for (const secret of secrets) logs = logs.replaceAll(secret, '[REDACTED]');
+      throw new Error(String(error) + '\nContainer diagnostics:\n' + logs);
     } finally {
       await compose(['down', '--volumes', '--remove-orphans']);
     }

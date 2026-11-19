@@ -46,3 +46,13 @@ The Umami entry passed manifest loading, named-volume checks, shell and Node syn
 The local Docker integration attempt could not start Umami because the host disk was full and Docker's image store reported input/output errors while pulling the image. Full catalog lint also encountered those Docker storage errors. Runtime setup, analytics, and restore checks remain unverified locally; the new CI runs have not been executed in this workspace.
 
 The original pull-request CI completed successfully on Linux x64 and arm64 (including the app integration test), with unit jobs also passing on macOS. After merging the Ghost catalog changes from main, type checking, portability lint, and unit tests were rerun locally; the merge update triggers a fresh CI run.
+
+## Listmonk catalog addition
+
+The Listmonk entry passed catalog lint with the local-image exception needed by the existing fixtures, type checking, and portability lint. Its Docker integration test passed on macOS arm64/Docker Desktop using a unique temporary project alongside the existing WordPress instance. It checked initial public URL setup, repeated setup and administrator login, list/subscriber API creation and readback with cleanup, upload persistence, and logical database restore after deleting the temporary PostgreSQL data volume. Image indexes were checked for Linux amd64 and arm64. CI includes this integration test on both Linux architectures; those CI runs have not been executed in this workspace.
+
+The original pull-request CI completed successfully on Linux x64 and arm64 (including the app integration test), with unit jobs also passing on macOS. After merging the Ghost catalog changes from main, type checking, portability lint, and unit tests were rerun locally; the merge update triggers a fresh CI run.
+
+## MySQL initialization fix for the Listmonk PR
+
+The combined suite exposed a Ghost database startup failure before the Listmonk test ran. The Ghost Compose definition exported the database user's password as `MYSQL_PWD` for the whole container, which also affected the official MySQL entrypoint's initial passwordless root connection. The password is now scoped to healthcheck, dump, restore, and test-client processes. The Ghost integration test captures redacted container logs before teardown on failure. Type checking, portability lint, 23 unit tests, and Compose healthcheck/environment checks passed locally; the Docker daemon was unresponsive, so end-to-end validation runs in CI.
