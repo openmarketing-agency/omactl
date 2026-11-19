@@ -2,7 +2,7 @@
 
 omactl manages the self-hosted apps in one Open Marketing Agency (OMA) instance. It installs apps from a catalog, runs functional checks, manages routing and connections between apps, takes backups, restores data, and applies updates with rollback.
 
-This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. The fixtures expose HTTP APIs.
+This guide covers the v1 tool in this repository. The current catalog contains Traefik, [WordPress](../catalog/apps/wordpress/README.md), [Ghost](../catalog/apps/ghost/README.md), and two test fixtures, `testapp` and `testclient`. WordPress provides a website and admin dashboard. Ghost provides a publishing site and admin interface. The fixtures expose HTTP APIs.
 
 ## Contents
 
@@ -234,6 +234,18 @@ omactl credentials wordpress
 ```
 
 The site uses the `wordpress` host under your instance base domain; its admin login is `/wp-admin/`. Read the [WordPress catalog guide](../catalog/apps/wordpress/README.md) for settings, credentials, backups, and upgrades. Existing instances need a catalog release containing the new entry; rerunning `init --catalog` does not refresh them.
+
+### Install Ghost
+
+Once the instance catalog includes the Ghost entry:
+
+```sh
+omactl install ghost --plan
+omactl install ghost
+omactl verify ghost
+```
+
+Open `/ghost/` on the `ghost` host under your instance base domain and create the site owner in your browser. Owner signup is required; `credentials ghost` shows database credentials rather than the owner password. Configure SMTP before relying on staff verification or password-reset emails. Read the [Ghost catalog guide](../catalog/apps/ghost/README.md) for deployment, verification, and backups.
 
 ### Start, stop, and restart
 
