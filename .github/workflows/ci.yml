@@ -52,6 +52,7 @@ jobs:
       - run: docker build --build-arg APP_VERSION=2.0.0 -t omactl-testapp:2.0.0 fixtures/testapp
       - run: OMA_E2E=1 bun run test:e2e
       - run: OMA_WORDPRESS_E2E=1 bun test --timeout 600000 test/e2e/wordpress.test.ts
+      - run: OMA_GHOST_E2E=1 bun test --timeout 600000 test/e2e/ghost.test.ts
       - run: OMA_LISTMONK_E2E=1 bun test --timeout 600000 test/e2e/listmonk.test.ts
       - if: always()
         uses: actions/upload-artifact@v4

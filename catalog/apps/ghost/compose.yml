@@ -1,0 +1,53 @@
+services:
+  ghost:
+    image: ghost:6.78.0-alpine@sha256:baa6dbff91a28ba36c526d1f6e761deb2efe3c238c630c3f318b62f258c2d76e
+    environment:
+      NODE_ENV: production
+      url: ${PUBLIC_URL}
+      database__client: mysql
+      database__connection__host: db
+      database__connection__port: "3306"
+      database__connection__user: ghost
+      database__connection__password: ${GHOST_DB_PASSWORD}
+      database__connection__database: ghost
+      server__host: 0.0.0.0
+      server__port: "2368"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - content:/var/lib/ghost/content
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const u = new URL(process.env.url); fetch('http://127.0.0.1:2368/ghost/api/admin/authentication/setup/', {headers: {Host: u.host, 'X-Forwarded-Proto': u.protocol.slice(0,-1)}, redirect: 'manual'}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 15s
+  db:
+    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+    environment:
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost
+      MYSQL_PASSWORD: ${GHOST_DB_PASSWORD}
+      MYSQL_PWD: ${GHOST_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/mysql
+      - dump:/dump
+    healthcheck:
+      test: [CMD, mysql, --protocol=TCP, --host=127.0.0.1, --user=ghost, --database=ghost, --execute=SELECT 1]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+volumes:
+  content:
+    name: oma_ghost_content
+  dbdata:
+    name: oma_ghost_dbdata
+  dump:
+    name: oma_ghost_dump
