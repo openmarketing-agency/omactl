@@ -32,3 +32,7 @@ Full acceptance on native Linux x64/arm64 CI, a physical reboot, macOS x64 execu
 ## WordPress catalog addition
 
 The WordPress entry was checked with 23 passing unit tests, catalog lint, type checking, and portability lint. A separate real-Docker integration test passed on macOS arm64/Docker Desktop: install, functional REST/database/upload checks, repeated setup with stable credentials, core-file migration preserving content, and recovery of a persistent post and upload after deletion of the MariaDB data volume. The test also checked generated secrets against operation journals and logs. The Linux x64/arm64 CI matrix now includes this WordPress integration test; those new CI runs have not been executed in this workspace.
+
+## Listmonk catalog addition
+
+The Listmonk entry passed catalog lint with the local-image exception needed by the existing fixtures, type checking, and portability lint. Its Docker integration test passed on macOS arm64/Docker Desktop using a unique temporary project alongside the existing WordPress instance. It checked initial public URL setup, repeated setup and administrator login, list/subscriber API creation and readback with cleanup, upload persistence, and logical database restore after deleting the temporary PostgreSQL data volume. Image indexes were checked for Linux amd64 and arm64. CI includes this integration test on both Linux architectures; those CI runs have not been executed in this workspace.

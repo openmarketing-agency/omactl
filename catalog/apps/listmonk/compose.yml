@@ -1,0 +1,64 @@
+services:
+  listmonk:
+    image: listmonk/listmonk:v6.2.0@sha256:f535d59e14991337a9f2d570273685378ae86b0d7698c3e00da444e3bc205286
+    command:
+      - sh
+      - -c
+      - ./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && exec ./listmonk --config ''
+    environment:
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__host: db
+      LISTMONK_db__port: "5432"
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${POSTGRES_PASSWORD}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_ADMIN_USER: ${LISTMONK_ADMIN_USER}
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/listmonk/uploads
+    healthcheck:
+      test: [CMD, wget, -qO-, http://localhost:9000/health]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 10s
+  db:
+    image: postgres:17-alpine@sha256:a77aa70e641402a21411b92b721c58d10f23b50ae5fdd2333efd22d166e1e5f7
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_DB: listmonk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - dump:/dump
+    healthcheck:
+      test: [CMD, pg_isready, -U, listmonk, -d, listmonk]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 10s
+  verify:
+    image: oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a
+    profiles:
+      - tools
+    environment:
+      LISTMONK_ADMIN_USER: ${LISTMONK_ADMIN_USER}
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD}
+      PUBLIC_URL: ${PUBLIC_URL}
+    depends_on:
+      listmonk:
+        condition: service_healthy
+    volumes:
+      - uploads:/listmonk/uploads
+volumes:
+  uploads:
+    name: oma_listmonk_uploads
+  pgdata:
+    name: oma_listmonk_pgdata
+  dump:
+    name: oma_listmonk_dump

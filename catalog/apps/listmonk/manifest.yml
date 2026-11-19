@@ -1,0 +1,52 @@
+id: listmonk
+name: Listmonk
+version: 6.2.0
+description: Newsletter and mailing list manager with PostgreSQL and persistent uploads
+resources:
+  memory_mb: 512
+  disk_mb: 1024
+requires:
+  - traefik
+main_service: listmonk
+routes:
+  - name: web
+    service: listmonk
+    port: 9000
+    host: "{appId}.{base_domain}"
+volumes:
+  - key: uploads
+    backup: files
+  - key: pgdata
+    backup: skip
+  - key: dump
+    backup: files
+stop_during_backup: true
+env:
+  - name: POSTGRES_PASSWORD
+    generate: password:32
+    secret: true
+  - name: LISTMONK_ADMIN_USER
+    value: oma-admin
+  - name: LISTMONK_ADMIN_PASSWORD
+    generate: password:32
+    secret: true
+  - name: PUBLIC_URL
+    value: "{url:web}"
+hooks:
+  setup:
+    service: verify
+    script: hooks/app.sh
+    timeout: 120
+  verify:
+    service: verify
+    script: hooks/app.sh
+    timeout: 60
+  pre_backup:
+    service: db
+    script: hooks/dump.sh
+    timeout: 300
+  post_restore:
+    service: db
+    script: hooks/load.sh
+    timeout: 300
+ready_timeout: 180
