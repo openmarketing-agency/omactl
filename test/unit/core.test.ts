@@ -13,7 +13,7 @@ import { Secrets } from '../../src/core/secrets';
 import { mutate, planFor } from '../../src/core/operation';
 import { verifySignature } from '../../src/update/channels';
 import { tar, untar } from '../../src/core/tar';
-import { writeJson, readEnv, saveEnv, exists } from '../../src/core/fs';
+import { writeJson, readEnv, saveEnv, exists, hash } from '../../src/core/fs';
 import { initGit, commit } from '../../src/core/history';
 import { nightlyMinute, systemdUnits, launchPlist } from '../../src/platform/scheduler';
 import { parseDockerJson } from '../../src/docker';
@@ -309,7 +309,6 @@ test('release publisher stages assets before publishing and skips assets with ma
   expect(calls[2].url).toBe('https://uploads.github.com/assets?name=omactl-test');
   expect(Buffer.from(calls[2].body).toString()).toBe('binary');
   expect(JSON.parse(calls[3].body)).toEqual({ draft: false });
-  const { hash } = await import('../../src/core/fs');
   let count = 0;
   const identical = async () => {
     count++;
@@ -323,6 +322,34 @@ test('release publisher stages assets before publishing and skips assets with ma
   await publishGithub('example/omactl', 'test-token', 'v0.1.0', [file], identical);
   expect(count).toBe(1);
 });
+
+test.skipIf(process.platform !== 'linux')(
+  'Linux packaging works without update signing keys',
+  async () => {
+    const dir = await temp();
+    const catalog = '{"version":"test"}\n';
+    await fs.mkdir(path.join(dir, 'dist'));
+    await fs.mkdir(path.join(dir, 'catalog'));
+    await fs.writeFile(path.join(dir, 'dist/omactl-linux-x64'), 'cli');
+    await fs.writeFile(path.join(dir, 'catalog/catalog.json'), catalog);
+    await fs.writeFile(path.join(dir, 'LICENSE'), 'license');
+
+    const result = Bun.spawnSync([process.execPath, path.resolve('scripts/package-linux.ts')], {
+      cwd: dir,
+      env: { PATH: process.env.PATH ?? '' },
+    });
+    expect(result.exitCode).toBe(0);
+    const archive = 'omactl-linux-x64.tar.gz';
+    const files = await fs.readdir(path.join(dir, 'dist'));
+    expect(files.sort()).toEqual(['SHA256SUMS', 'omactl-linux-x64', archive]);
+    const checksum = hash(await fs.readFile(path.join(dir, 'dist', archive)));
+    expect(await fs.readFile(path.join(dir, 'dist/SHA256SUMS'), 'utf8')).toBe(
+      `${checksum}  ${archive}\n`,
+    );
+    expect(Bun.spawnSync(['tar', '-xzf', `dist/${archive}`], { cwd: dir }).exitCode).toBe(0);
+    expect((await fs.stat(path.join(dir, 'bin/omactl'))).mode & 0o777).toBe(0o755);
+  },
+);
 
 test('config templates preserve JSON and block braces while replacing named variables', () => {
   const ctx = { appId: 'testapp', base_domain: 'localhost' };

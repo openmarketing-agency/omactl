@@ -48,7 +48,7 @@ OMA_E2E=1 bun run test:e2e
 
 The fixture suite refuses existing OMA containers, uses port 18080 and `.e2e/`, starts a local signed release server, and cleans up its own containers/volumes. It includes all 16 scenarios from the build spec. Without `OMA_E2E=1`, Docker tests are skipped.
 
-For production releases, configure `OMA_RELEASE_PUBLIC_KEYS` before building, then `OMA_RELEASE_PRIVATE_KEY` and `OMA_RELEASE_ASSET_URL` for `bun run release`. No production signing key was supplied with the spec; default builds refuse network releases. Test keys are never trusted by default. Release publication and real-reboot CI need repository credentials and cloud variables; see the workflows in `.github/workflows/`.
+The tag workflow publishes the portable Linux package with the repository catalog. The demo catalog entries use local fixture images. To publish the signed update channel, run the release workflow manually with `OMA_RELEASE_PUBLIC_KEYS` configured as an Actions variable and `OMA_RELEASE_PRIVATE_KEY` configured as an Actions secret. For `bun run release` locally, also set `OMA_RELEASE_ASSET_URL`.
 
 The WordPress integration test checks setup, REST verification, and recovery of a post and upload after loss of the database volume:
 
