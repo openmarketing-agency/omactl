@@ -2,6 +2,8 @@
 
 One local CLI for installing, operating, verifying, backing up and updating an Open Marketing Agency instance. Runtime requirements: Docker Engine 24.0+ with Compose 2.24+ (Docker Desktop, OrbStack and Colima are supported through the active Docker context).
 
+Pushing a version tag builds the Linux x86-64 package `omactl-linux-x64.tar.gz` with `bin/omactl`, `catalog/`, and the license. Verify it against `SHA256SUMS` on the same [GitHub release](https://github.com/openmarketing-agency/omactl/releases) before extracting.
+
 Start with the [user guide](docs/USER_GUIDE.md) for installation, the local demo, day-to-day commands, backups, recovery, updates, and troubleshooting.
 
 ```sh
