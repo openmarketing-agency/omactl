@@ -1,6 +1,7 @@
 import { publishGithub } from './github-release';
 import { sign, createPublicKey, verify } from 'node:crypto';
-import { fs, path, hash, write, writeJson } from '../src/core/fs';
+import { tmpdir } from 'node:os';
+import { fs, path, hash, write } from '../src/core/fs';
 import { archiveDir } from '../src/core/tar';
 import { VERSION } from '../src/core/version';
 import { targets } from './build';
@@ -36,6 +37,38 @@ const catalogName = `catalog-${metadata.version}.tar.gz`,
   catalog = await archiveDir('catalog');
 await write(path.join('dist', catalogName), catalog);
 sums.push(`${hash(catalog)}  ${catalogName}`);
+const packageName = 'omactl-linux-x64.tar.gz';
+const packagePath = path.resolve('dist', packageName);
+const staging = await fs.mkdtemp(path.join(tmpdir(), 'omactl-package-'));
+try {
+  const bin = path.join(staging, 'bin');
+  await fs.mkdir(bin);
+  await fs.copyFile('dist/omactl-linux-x64', path.join(bin, 'omactl'));
+  await fs.chmod(path.join(bin, 'omactl'), 0o755);
+  const archive = Bun.spawn(
+    [
+      'tar',
+      '-czf',
+      packagePath,
+      '--sort=name',
+      '--mtime=@0',
+      '--owner=0',
+      '--group=0',
+      '-C',
+      staging,
+      'bin/omactl',
+      '-C',
+      process.cwd(),
+      'catalog',
+      'LICENSE',
+    ],
+    { stderr: 'inherit' },
+  );
+  if ((await archive.exited) !== 0) throw new Error(`Could not create ${packageName}`);
+} finally {
+  await fs.rm(staging, { recursive: true, force: true });
+}
+sums.push(`${hash(await fs.readFile(packagePath))}  ${packageName}`);
 const release = {
   channel,
   published_at: new Date().toISOString(),
@@ -50,6 +83,7 @@ await write('dist/SHA256SUMS', sums.join('\n') + '\n');
 const releaseFiles = [
   ...Object.keys(assets).map((p) => 'omactl-' + p),
   catalogName,
+  packageName,
   `${channel}.json`,
   `${channel}.json.sig`,
   'SHA256SUMS',
