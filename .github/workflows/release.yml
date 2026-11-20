@@ -4,12 +4,40 @@ on:
     tags: ['v*']
   workflow_dispatch:
 permissions:
-  contents: write
-  packages: write
+  contents: read
 jobs:
-  release:
+  package:
+    if: github.event_name == 'push' && !github.event.deleted
     runs-on: ubuntu-24.04
     environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck && bun test test/unit
+      - run: bun run dev -- catalog lint catalog --allow-local-images --json
+      - name: Build and publish the Linux package
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            export OMA_BUILD_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          bun run build --current
+          bun scripts/package-linux.ts
+
+  signed-release:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
